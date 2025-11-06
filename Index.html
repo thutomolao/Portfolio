@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>My Portfolio</title>
+
+<style>
+  /* Fonts */
+  @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500&family=Josefin+Sans:wght@400;700&display=swap');
+
+  :root{
+    --bg:#000000;
+    --muted:#9b9b9b;
+    --white:#ECECEC;
+    --soft-grey: #f2f2f2; /* preloader background */
+    --ease: 300ms cubic-bezier(.22,.9,.32,1);
+    --caps: 'Josefin Sans', serif;
+  }
+
+  /* Basic reset */
+  * { box-sizing: border-box; }
+  html,body { height:100%; margin:0; }
+  body{
+    font-family: 'Barlow', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    background:var(--bg);
+    color:var(--white);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    overflow-y:auto;
+    scroll-behavior:smooth;
+    cursor: none; /* hide native cursor (use custom) */
+  }
+
+  /* PRELOADER */
+  .preloader {
+    position:fixed; inset:0;
+    background: var(--soft-grey);
+    display:flex; align-items:center; justify-content:center;
+    z-index:99999; flex-direction:column;
+    transition: opacity 700ms ease, visibility 700ms;
+  }
+  .preloader.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+  .preloader h1 { font-family: var(--caps); color:#111; font-size:22px; margin-bottom:8px; }
+  .preloader .sub { color:#666; font-size:14px; margin-bottom:18px; }
+  .preloader .loader-dot {
+    width:10px;height:10px;border-radius:50%;background:#111;opacity:.9;
+    animation: plink 1000ms infinite ease-in-out;
+  }
+  @keyframes plink {
+    0% { transform: translateY(0); opacity:.9; }
+    50% { transform: translateY(-8px); opacity: .35; }
+    100% { transform: translateY(0); opacity:.9; }
+  }
+
+  /* NAV */
+  nav{
+    position:fixed; top:0; left:0; right:0; display:flex; justify-content:center;
+    background:linear-gradient(180deg, rgba(0,0,0,0.42), rgba(0,0,0,0.12)); backdrop-filter:blur(6px);
+    padding:12px 20px; z-index:1200;
+  }
+  nav ul{ display:flex; gap:18px; list-style:none; margin:0; padding:0; }
+  nav a{ color:var(--white); text-decoration:none; text-transform:uppercase; font-size:12px; letter-spacing:1px; opacity:.95; }
+  nav a:hover{ opacity:1; }
+
+  /* HERO */
+  .hero{ position:relative; height:74vh; min-height:420px; overflow:hidden; }
+  .slide{ position:absolute; inset:0; background-size:cover; background-position:center; opacity:0; transition:opacity 1000ms ease; }
+  .slide.active{ opacity:1; }
+  .hero-inner{ position:relative; z-index:3; height:100%; display:flex; align-items:center; justify-content:center; text-align:center; padding:0 20px; }
+  .hero h1{ font-family:var(--caps); font-weight:700; font-size:clamp(28px,4.5vw,48px); letter-spacing:2px; margin:0 0 8px; color:var(--white); }
+  .hero p{ color:var(--muted); max-width:720px; font-size:15px; line-height:1.6; }
+
+  /* Sections */
+  section{ padding:64px 7vw; max-width:1400px; margin:0 auto; opacity:0; transform:translateY(20px); transition:opacity 520ms var(--ease), transform 520ms var(--ease); }
+  section.visible{ opacity:1; transform:none; }
+  h2{ font-family:var(--caps); letter-spacing:2px; margin-bottom:14px; font-size:18px; color:var(--white); }
+  p, ul { font-size:15px; line-height:1.7; color:var(--muted); }
+  ul{ margin-top:8px; padding-left:1rem; }
+
+  /* Resume button row */
+  .resume-row{ margin-top:14px; display:flex; gap:12px; align-items:center; }
+  .resume-btn{ background:transparent; border:1px solid rgba(255,255,255,0.08); color:var(--white); padding:10px 14px; border-radius:8px; font-weight:600; text-decoration:none; }
+  .resume-btn:hover{ transform:translateY(-2px); box-shadow:0 12px 30px rgba(0,0,0,0.6); }
+
+  /* Projects grid */
+  .projects-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-top:12px; }
+  .project{ position:relative; overflow:hidden; border-radius:10px; background:#111; border:1px solid rgba(255,255,255,0.03); display:block; cursor:pointer; transition:transform 280ms var(--ease), box-shadow 280ms var(--ease); outline:none; }
+  .project img{ width:100%; height:100%; object-fit:cover; transition:transform 600ms var(--ease), filter 280ms var(--ease); filter:brightness(.82); display:block; }
+  .project:hover{ transform:translateY(-6px); box-shadow:0 18px 40px rgba(0,0,0,0.6); }
+  .project:hover img{ transform:scale(1.06); filter:brightness(1); }
+  .project h3{ position:absolute; left:16px; bottom:14px; margin:0; font-family:var(--caps); font-size:14px; color:var(--white); }
+
+  /* Contact */
+  form{ max-width:540px; display:flex; flex-direction:column; gap:10px; }
+  input, textarea{ background:#121212; border:1px solid rgba(255,255,255,0.03); padding:12px; border-radius:8px; color:var(--white); font-size:15px; }
+  button{ background:var(--white); color:var(--bg); padding:10px 14px; border-radius:8px; border:none; font-weight:700; cursor:pointer; }
+
+  /* Footer */
+  footer{ padding:36px 7vw; text-align:center; font-size:13px; color:var(--muted); }
+
+  /* Cursor - smaller ring & dot */
+  .cursor-ring{
+    position:fixed; left:0; top:0; width:44px; height:44px; border-radius:50%;
+    border:2px solid rgba(255,255,255,0.30); transform:translate(-50%,-50%);
+    pointer-events:none; z-index:99999;
+    transition: background 180ms ease, border-color 180ms ease, transform 160ms ease, width 160ms ease, height 160ms ease, opacity 180ms ease;
+    mix-blend-mode:difference;
+    background: rgba(255,255,255,0.06); opacity:0.92;
+  }
+  .cursor-dot{
+    position:fixed; left:0; top:0; width:6px; height:6px; border-radius:50%;
+    background:var(--white); transform:translate(-50%,-50%); pointer-events:none; z-index:100000;
+    transition:transform 100ms ease, opacity 120ms ease; mix-blend-mode:difference; opacity:0.95;
+  }
+  .cursor-ring.hover{
+    transform:translate(-50%,-50%) scale(1.45);
+    background: rgba(255,255,255,0.95);
+    border-color: rgba(255,255,255,0.95);
+    opacity:1;
+  }
+  .cursor-dot.hidden{ opacity:0; transform:translate(-50%,-50%) scale(0.6); }
+
+  /* LIGHTBOX (crossfade with two layered images) */
+  .lightbox{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    background: rgba(6,6,6,0.92); z-index:2100; padding:22px;
+  }
+  .lightbox.open{ display:flex; }
+  .lightbox-inner{ width:100%; max-width:1200px; max-height:90vh; display:flex; flex-direction:column; gap:12px; align-items:center; }
+  .lightbox-stage{ position:relative; width:100%; height:calc(100vh - 170px); max-height:78vh; display:flex; align-items:center; justify-content:center; }
+  .lightbox-stage img {
+    position:absolute; max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; border-radius:8px;
+    opacity:0; transition:opacity 600ms ease; box-shadow:0 16px 40px rgba(0,0,0,0.6);
+  }
+  .lightbox-stage img.visible { opacity:1; }
+  .caption-bar{ width:100%; display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-radius:8px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.18)); color:var(--white); font-family:var(--caps); font-size:15px; gap:8px; }
+  .caption-left{ display:flex; align-items:center; gap:12px; }
+  .caption-title{ font-weight:700; margin:0; }
+  .caption-desc{ font-weight:400; color:var(--muted); font-size:13px; opacity:.95; margin:0; }
+  .caption-controls{ display:flex; gap:10px; align-items:center; }
+  .cap-btn{ background:transparent; border:1px solid rgba(255,255,255,0.08); color:var(--white); padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+  .close-btn{ background:transparent; border:none; color:var(--muted); font-size:20px; cursor:pointer; }
+
+  /* responsive tweaks */
+  @media (max-width:720px){
+    .hero{ height:54vh; }
+    .lightbox-stage{ height: calc(100vh - 200px); }
+    .caption-bar{ font-size:13px; padding:10px; }
+    nav ul{ gap:12px; }
+    .cursor-ring{ width:38px; height:38px; }
+    .cursor-dot{ width:5px; height:5px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- PRELOADER -->
+  <div class="preloader" id="preloader" role="status" aria-hidden="false">
+    <h1>Welcome to My Portfolio</h1>
+    <div class="sub">Thuto Molao — Interior Designer</div>
+    <div class="loader-dot" aria-hidden="true"></div>
+  </div>
+
+  <!-- NAV -->
+  <nav aria-label="Main navigation">
+    <ul>
+      <li><a href="#home">Home</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+<section id="home" class="hero" aria-label="hero">
+  <!-- First slide stays as-is -->
+  <div class="slide active" style="background-image:url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80')"></div>
+
+  <!-- Updated modern bedroom slide -->
+  <div class="slide" style="background-image:url('https://mir-s3-cdn-cf.behance.net/project_modules/1400/cffeb8200749729.66680a3c1de4b.png')"></div>
+
+  <!-- Third slide: modern kitchen -->
+  <div class="slide" style="background-image:url('https://mir-s3-cdn-cf.behance.net/project_modules/max_3840/187a9e146710131.62b4d758dd0c7.jpg')"></div>
+
+  <div class="hero-inner">
+    <div>
+      <h1>Thuto Molao</h1>
+      <p>Interior Designer — turning complex problems into simple, elegant spaces.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" aria-label="about">
+  <h2>About Me</h2>
+
+  <!-- Flex container for text + image -->
+  <div style="display:flex; flex-wrap:wrap; gap:30px; align-items:flex-start;">
+
+    <!-- Text -->
+    <div style="flex:1; min-width:250px; max-width:650px;">
+      <p>I am Thuto Molao, an Interior Designer. I enjoy taking complex problems and turning them into simple beautiful designs. I love the logic and structure around interior designing. I pride myself in giving clients an elegant outcome beyond my visualization skills.</p>
+      <p>I am an excellent problem solver, and I understand the importance of being able to work autonomously in a fast-paced environment. Whilst dedicating my commitment to clients, I see myself as a well-rounded individual with the devotion necessary to succeed as an Interior Designer.</p>
+
+      <div class="resume-row">
+        <a class="resume-btn" id="resumeLink" href="https://drive.google.com/drive/folders/1S8SLI8EiFfzzkMrr7SiGh87jRrtZjOro" target="_blank" rel="noopener noreferrer">Download Resume (PDF)</a>
+        <small style="color:var(--muted); font-size:12px;">Opens in new tab</small>
+      </div>
+
+      
+      <p style="margin-top:16px"><strong>Core skills include:</strong></p>
+      <ul>
+        <li>Computer-Aided Design</li>
+        <li>Lighting / Colour Schemes</li>
+        <li>2D and 3D Design Tools</li>
+        <li>SketchUp Pro</li>
+        <li>Rendering</li>
+        <li>Walk-through</li>
+        <li>Textiles and Materials</li>
+        <li>Conceptual Designs</li>
+        <li>Design Strategies / Concepts</li>
+        <li>Interiors</li>
+        <li>Architecture and Furniture</li>
+      </ul>
+    </div>
+
+    <!-- Image -->
+    <div style="flex:1; min-width:330px; max-width:400px;">
+      <img src="C:\Users\thuto\Documents\html Web15\Thuto Molao Site1.jpg" alt="Thuto Molao Portrait" style="width:90%; border-radius:40px; object-fit:cover;">
+    </div>
+
+  </div>
+</section>
+
+
+
+  <!-- SERVICES -->
+  <section id="services" aria-label="services">
+    <h2>My Services</h2>
+    <ul>
+      <li>Interior Design Consultation</li>
+      <li>Space Planning & Layout</li>
+      <li>3D Visualizations & Rendering</li>
+      <li>Material & Lighting Consultation</li>
+    </ul>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <h2>Projects</h2>
+    <div class="projects-grid">
+      <!-- Modern Living -->
+      <div class="project" 
+           data-title="Modern Living" 
+           data-desc="A bright, open-plan living space with modern minimal design and natural lighting." 
+           data-images="
+             https://picsum.photos/id/1018/1000/600,
+             https://picsum.photos/id/1015/1000/600,
+             https://picsum.photos/id/1016/1000/600,
+             https://picsum.photos/id/1020/1000/600,
+             https://picsum.photos/id/1021/1000/600">
+        <img src="https://picsum.photos/id/1018/600/400" alt="Modern Living">
+        <h3>Modern Living</h3>
+      </div>
+
+      <!-- Office Space -->
+      <div class="project" 
+           data-title="Office Space" 
+           data-desc="Collaborative office layout." 
+           data-images="
+             https://picsum.photos/id/1025/1000/600,
+             https://picsum.photos/id/1033/1000/600,
+             https://picsum.photos/id/1035/1000/600">
+        <img src="https://picsum.photos/id/1025/600/400" alt="Office Space">
+        <h3>Office Space</h3>
+      </div>
+
+      <!-- Apartments -->
+      <div class="project" 
+           data-title="Apartments" 
+           data-desc="Contemporary Aparment layout." 
+           data-images="
+             https://picsum.photos/id/1025/1000/600,
+             https://picsum.photos/id/1033/1000/600,
+             https://picsum.photos/id/1035/1000/600">
+        <img src="https://picsum.photos/id/1025/600/400" alt="Apartments">
+        <h3>Apartment Living</h3>
+      </div>
+
+      <!-- Residential -->
+      <div class="project" 
+           data-title="Residential" 
+           data-desc="Transforming Houses into Homes with a Modern Outcome." 
+           data-images="
+             https://picsum.photos/id/1025/1000/600,
+             https://picsum.photos/id/1033/1000/600,
+             https://picsum.photos/id/1035/1000/600">
+        <img src="https://picsum.photos/id/1025/600/400" alt="Residential">
+        <h3>Residential</h3>
+      </div>
+
+      <!-- Retail -->
+      <div class="project" 
+           data-title="Retail" 
+           data-desc="Spaces that sell & Inspire." 
+           data-images="
+             https://picsum.photos/id/1025/1000/600,
+             https://picsum.photos/id/1033/1000/600,
+             https://picsum.photos/id/1035/1000/600">
+        <img src="https://picsum.photos/id/1025/600/400" alt="Retail">
+        <h3>Retail</h3>
+      </div>
+
+      <!-- Wellness Center -->
+      <div class="project" 
+           data-title="Welness" 
+           data-desc="Calm and Healthy Envioronments." 
+           data-images="
+             https://picsum.photos/id/1025/1000/600,
+             https://picsum.photos/id/1033/1000/600,
+             https://picsum.photos/id/1035/1000/600">
+        <img src="https://picsum.photos/id/1025/600/400" alt="Welness Center">
+        <h3>Wellness Center</h3>
+      </div>
+
+      <!-- Landscape Design -->
+      <div class="project" 
+           data-title="Landscape" 
+           data-desc="Outdoor Spaces With Style and Fuction." 
+           data-images="
+             https://picsum.photos/id/1043/1000/600,
+             https://picsum.photos/id/1045/1000/600,
+             https://picsum.photos/id/1050/1000/600">
+        <img src="https://picsum.photos/id/1043/600/400" alt="Lanscape">
+        <h3>Landscape</h3>
+      </div>
+
+      <!-- Kitchen Design -->
+      <div class="project" 
+           data-title="Kitchen Design" 
+           data-desc="Clean, functional & Modern kitchen design." 
+           data-images="
+             https://picsum.photos/id/1062/1000/600,
+             https://picsum.photos/id/1069/1000/600,
+             https://picsum.photos/id/1070/1000/600">
+        <img src="https://picsum.photos/id/1062/600/400" alt="Minimal Kitchen">
+        <h3>Kitchen Design</h3>
+      </div>
+    </div>
+  </section>
+
+  <!-- DESIGN PROCESS -->
+<section id="process" aria-label="design process" style="background:#252525; padding:64px 7vw; text-align:center;">
+  <h2 style="color:#ffffff; font-family:'Josefin Sans', serif; letter-spacing:1.5px; margin-bottom:40px;">My Design Process</h2>
+  <div style="display:flex; justify-content:center; gap:60px; flex-wrap:wrap; max-width:900px; margin:0 auto;">
+    <div style="text-align:center;">
+      <div style="width:50px; height:50px; border-radius:50%; background:#111; color:#fff; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-weight:700;">1</div>
+      <div style="font-size:14px; color:#ffffff;">Consultation</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:50px; height:50px; border-radius:50%; background:#111; color:#fff; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-weight:700;">2</div>
+      <div style="font-size:14px; color:#ffffff;">Concept</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:50px; height:50px; border-radius:50%; background:#111; color:#fff; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-weight:700;">3</div>
+      <div style="font-size:14px; color:#fafafa;">Development</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:50px; height:50px; border-radius:50%; background:#111; color:#fff; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-weight:700;">4</div>
+      <div style="font-size:14px; color:#ffffff;">Execution</div>
+    </div>
+  </div>
+</section>
+
+  <!-- CONTACT -->
+  <section id="contact" aria-label="contact">
+    <h2>Contact Me</h2>
+    <form id="contactForm">
+      <label for="nameField">Name</label>
+      <input id="nameField" name="name" type="text" required />
+
+      <label for="emailField">Email</label>
+      <input id="emailField" name="email" type="email" required />
+
+      <label for="messageField">Message</label>
+      <textarea id="messageField" name="message" rows="5" required></textarea>
+
+      <button type="submit">Send Message</button>
+      <small style="color:var(--muted); font-size:12px;">Opens your email client (mailto:). Replace with server handling for production if desired.</small>
+    </form>
+  </section>
+
+  <footer>
+    <small>© 2025 Thuto Molao — Interior Designer</small>
+  </footer>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox">
+    <div class="lightbox-inner">
+      <div class="lightbox-stage">
+        <img id="lbImgA" src="" alt="">
+        <img id="lbImgB" src="" alt="">
+      </div>
+      <div class="caption-bar">
+        <div class="caption-left">
+          <button class="close-btn" id="lbClose">✕</button>
+          <div>
+            <div class="caption-title" id="captionTitle">Project Title</div>
+            <div class="caption-desc" id="captionDesc">Short description here</div>
+          </div>
+        </div>
+        <div class="caption-controls">
+          <button class="cap-btn" id="prevBtn">← Previous</button>
+          <button class="cap-btn" id="nextBtn">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cursor elements -->
+  <div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+  <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+
+<script>
+    /* PRELOADER */
+const preloader = document.getElementById('preloader');
+window.addEventListener('load', ()=>{ setTimeout(()=>{ preloader.classList.add('hidden'); },900); });
+
+/* HERO SLIDER */
+(function(){ const slides=document.querySelectorAll('.slide'); let i=0; setInterval(()=>{slides[i].classList.remove('active'); i=(i+1)%slides.length; slides[i].classList.add('active');},5200); })();
+
+/* FADE-IN SECTIONS */
+const sections=document.querySelectorAll('section');
+const io=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:0.18});
+sections.forEach(s=>io.observe(s));
+
+/* --------------------------
+   Cursor: smooth follow (lerp), ring + dot
+   -------------------------- */
+const ring = document.getElementById('cursorRing');
+const dot = document.getElementById('cursorDot');
+let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0, dotX = 0, dotY = 0;
+const ringEase = 0.18, dotEase = 0.35;
+document.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  // immediate dot placement for snappiness
+  dot.style.left = mouseX + 'px';
+  dot.style.top = mouseY + 'px';
+  dotX = mouseX; dotY = mouseY;
+});
+function animateCursor(){
+  ringX += (mouseX - ringX) * ringEase;
+  ringY += (mouseY - ringY) * ringEase;
+  ring.style.left = ringX + 'px'; ring.style.top = ringY + 'px';
+  dotX += (mouseX - dotX) * dotEase; dotY += (mouseY - dotY) * dotEase;
+  dot.style.left = dotX + 'px'; dot.style.top = dotY + 'px';
+  requestAnimationFrame(animateCursor);
+}
+requestAnimationFrame(animateCursor);
+
+/* Hover effects for interactive elements */
+const hoverSelector = 'a, button, .project, .cap-btn';
+document.addEventListener('pointerover', (e) => {
+  if(e.target.closest(hoverSelector)){
+    ring.classList.add('hover'); dot.classList.add('hidden');
+  }
+});
+document.addEventListener('pointerout', (e) => {
+  if(!e.relatedTarget || !e.relatedTarget.closest || !e.relatedTarget.closest(hoverSelector)){
+    ring.classList.remove('hover'); dot.classList.remove('hidden');
+  }
+});
+
+/* LIGHTBOX */
+const projects=document.querySelectorAll('.project');
+const lightbox=document.getElementById('lightbox');
+const lbImgA=document.getElementById('lbImgA');
+const lbImgB=document.getElementById('lbImgB');
+const captionTitle=document.getElementById('captionTitle');
+const captionDesc=document.getElementById('captionDesc');
+const prevBtn=document.getElementById('prevBtn');
+const nextBtn=document.getElementById('nextBtn');
+const closeBtn=document.getElementById('lbClose');
+
+let currentIndex=0, currentImage=0, visibleIsA=true;
+
+function getImages(proj){ return proj.dataset.images.split(',').map(s=>s.trim()); }
+
+function showImage(idx){
+  const imgs=getImages(projects[currentIndex]);
+  currentImage=(idx+imgs.length)%imgs.length;
+  const src=imgs[currentImage];
+  if(visibleIsA){ lbImgB.src=src; lbImgB.alt=projects[currentIndex].dataset.title; lbImgB.classList.add('visible'); lbImgA.classList.remove('visible'); }
+  else { lbImgA.src=src; lbImgA.alt=projects[currentIndex].dataset.title; lbImgA.classList.add('visible'); lbImgB.classList.remove('visible'); }
+  visibleIsA=!visibleIsA;
+}
+
+function openLightbox(idx){ currentIndex=idx; captionTitle.textContent=projects[idx].dataset.title; captionDesc.textContent=projects[idx].dataset.desc||''; showImage(0); lightbox.classList.add('open'); document.body.style.overflow='hidden'; closeBtn.focus(); }
+function closeLightbox(){ lightbox.classList.remove('open'); document.body.style.overflow=''; setTimeout(()=>{lbImgA.src=''; lbImgB.src='';},700);}
+function showNext(){ showImage(currentImage+1); }
+function showPrev(){ showImage(currentImage-1); }
+
+projects.forEach((el,i)=>{
+  el.dataset.index=i;
+  el.addEventListener('click',()=>openLightbox(i));
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openLightbox(i);}});
+});
+
+nextBtn.addEventListener('click',e=>{e.stopPropagation();showNext();});
+prevBtn.addEventListener('click',e=>{e.stopPropagation();showPrev();});
+closeBtn.addEventListener('click',e=>{e.stopPropagation();closeLightbox();});
+lightbox.addEventListener('click',e=>{if(e.target===lightbox)closeLightbox();});
+document.addEventListener('keydown',e=>{if(lightbox.classList.contains('open')){if(e.key==='Escape')closeLightbox(); if(e.key==='ArrowRight')showNext(); if(e.key==='ArrowLeft')showPrev();}});
+</script>
+
+</body>
+</html>
